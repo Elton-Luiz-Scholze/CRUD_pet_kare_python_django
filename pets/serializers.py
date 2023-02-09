@@ -5,6 +5,7 @@ from traits.serializers import TraitsSerializer
 
 
 class PetsSerializer(serializers.Serializer):
+    id = serializers.IntegerField(read_only=True)
     name = serializers.CharField(max_length=50)
     age = serializers.IntegerField()
     weight = serializers.FloatField()
