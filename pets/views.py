@@ -4,6 +4,7 @@ from .serializers import PetsSerializer
 from .models import Pet
 from groups.models import Group
 from traits.models import Trait
+from django.shortcuts import get_object_or_404
 
 
 class PetView(APIView, PageNumberPagination):
@@ -38,6 +39,17 @@ class PetView(APIView, PageNumberPagination):
         return Response(serializer.data, status.HTTP_201_CREATED)
 
     def get(self, req: Request):
+        trait_param = req.query_params.get("trait")
+
+        if trait_param:
+            pets = Pet.objects.filter(traits__name=trait_param).all()
+
+            result_page = self.paginate_queryset(pets, req)
+
+            serializer = PetsSerializer(pets, many=True)
+
+            return self.get_paginated_response(serializer.data)
+
         pet_data = Pet.objects.all()
 
         result_page = self.paginate_queryset(pet_data, req)
@@ -45,3 +57,12 @@ class PetView(APIView, PageNumberPagination):
         serializer = PetsSerializer(result_page, many=True)
 
         return self.get_paginated_response(serializer.data)
+
+
+class PetInfoParamView(APIView):
+    def get(self, req: Request, pet_id):
+        pet_data = get_object_or_404(Pet, pk=pet_id)
+
+        serializer = PetsSerializer(pet_data)
+
+        return Response(serializer.data)
