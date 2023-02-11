@@ -66,3 +66,10 @@ class PetInfoParamView(APIView):
         serializer = PetsSerializer(pet_data)
 
         return Response(serializer.data)
+
+    def delete(self, req: Request, pet_id):
+        pet_data = get_object_or_404(Pet, pk=pet_id)
+
+        pet_data.delete()
+
+        return Response(status=status.HTTP_204_NO_CONTENT)
