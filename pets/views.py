@@ -81,7 +81,7 @@ class PetInfoParamView(APIView):
         serializer.is_valid(raise_exception=True)
 
         group_data = serializer.validated_data.pop("group", None)
-        trait_data = serializer.validated_data.pop("traits", None)
+        traits_data = serializer.validated_data.pop("traits", None)
         pet_data = serializer.validated_data
 
         if group_data:
@@ -94,10 +94,10 @@ class PetInfoParamView(APIView):
                 new_group = Group.objects.create(**group_data)
                 pet.group = new_group
 
-        if trait_data:
+        if traits_data:
             list_trait = []
 
-            for trait in trait_data:
+            for trait in traits_data:
                 find_trait = Trait.objects.filter(name__iexact=trait["name"]).first()
 
                 if find_trait:
