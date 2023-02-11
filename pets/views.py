@@ -66,3 +66,53 @@ class PetInfoParamView(APIView):
         serializer = PetsSerializer(pet_data)
 
         return Response(serializer.data)
+
+    def delete(self, req: Request, pet_id):
+        pet_data = get_object_or_404(Pet, pk=pet_id)
+
+        pet_data.delete()
+
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    def patch(self, req: Request, pet_id):
+        pet = get_object_or_404(Pet, pk=pet_id)
+        serializer = PetsSerializer(data=req.data, partial=True)
+
+        serializer.is_valid(raise_exception=True)
+
+        group_data = serializer.validated_data.pop("group", None)
+        trait_data = serializer.validated_data.pop("traits", None)
+        pet_data = serializer.validated_data
+
+        if group_data:
+            try:
+                find_group = Group.objects.get(
+                    scientific_name__iexact=group_data["scientific_name"]
+                )
+                pet.group = find_group
+            except Group.DoesNotExist:
+                new_group = Group.objects.create(**group_data)
+                pet.group = new_group
+
+        if trait_data:
+            list_trait = []
+
+            for trait in trait_data:
+                find_trait = Trait.objects.filter(name__iexact=trait["name"]).first()
+
+                if find_trait:
+                    list_trait.append(find_trait)
+                else:
+                    new_trait = Trait.objects.create(**trait)
+                    list_trait.append(new_trait)
+
+            pet.traits.set(list_trait)
+
+        for key, value in pet_data.items():
+            setattr(pet, key, value)
+
+        pet.save()
+
+        serializer = PetsSerializer(pet)
+
+        return Response(serializer.data)
